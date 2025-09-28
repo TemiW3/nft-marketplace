@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, transfer, Transfer, TokenAccount, Mint};
+use anchor_spl::token::{Token, transfer, Transfer};
 
 use crate::state::*;
 

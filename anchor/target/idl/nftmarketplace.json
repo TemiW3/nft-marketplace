@@ -8,56 +8,115 @@
   },
   "instructions": [
     {
-      "name": "close",
-      "discriminator": [98, 165, 201, 177, 108, 65, 206, 96],
+      "name": "buy",
+      "discriminator": [
+        102,
+        6,
+        61,
+        18,
+        1,
+        218,
+        235,
+        234
+      ],
       "accounts": [
         {
-          "name": "payer",
+          "name": "buyer",
           "writable": true,
           "signer": true
         },
         {
-          "name": "nftmarketplace",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "decrement",
-      "discriminator": [106, 227, 168, 59, 248, 27, 150, 101],
-      "accounts": [
-        {
-          "name": "nftmarketplace",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "increment",
-      "discriminator": [11, 18, 104, 9, 104, 174, 59, 33],
-      "accounts": [
-        {
-          "name": "nftmarketplace",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "initialize",
-      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
-      "accounts": [
-        {
-          "name": "payer",
+          "name": "listing",
           "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "listing.mint",
+                "account": "Listing"
+              }
+            ]
+          }
         },
         {
-          "name": "nftmarketplace",
+          "name": "marketplace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116,
+                  112,
+                  108,
+                  97,
+                  99,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_account",
           "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "listing.mint",
+                "account": "Listing"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_token_account",
+          "writable": true
+        },
+        {
+          "name": "seller"
+        },
+        {
+          "name": "marketplace_authority"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "system_program",
@@ -67,36 +126,342 @@
       "args": []
     },
     {
-      "name": "set",
-      "discriminator": [198, 51, 53, 241, 116, 29, 126, 194],
+      "name": "cancel_nft_listing",
+      "discriminator": [
+        146,
+        116,
+        90,
+        64,
+        207,
+        127,
+        251,
+        28
+      ],
       "accounts": [
         {
-          "name": "nftmarketplace",
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "listing.mint",
+                "account": "Listing"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "listing.mint",
+                "account": "Listing"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
           "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_nft_listing",
+      "discriminator": [
+        165,
+        99,
+        166,
+        147,
+        209,
+        188,
+        34,
+        140
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_token_account",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "value",
-          "type": "u8"
+          "name": "price",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_marketplace",
+      "discriminator": [
+        47,
+        81,
+        64,
+        0,
+        96,
+        56,
+        105,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "marketplace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116,
+                  112,
+                  108,
+                  97,
+                  99,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_percentage",
+          "type": "u16"
         }
       ]
     }
   ],
   "accounts": [
     {
-      "name": "Nftmarketplace",
-      "discriminator": [255, 176, 4, 245, 188, 253, 124, 25]
+      "name": "Listing",
+      "discriminator": [
+        218,
+        32,
+        50,
+        73,
+        43,
+        134,
+        26,
+        58
+      ]
+    },
+    {
+      "name": "NftMarketplace",
+      "discriminator": [
+        245,
+        64,
+        30,
+        22,
+        105,
+        164,
+        209,
+        17
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ListingInactive",
+      "msg": "Listing is inactive"
+    },
+    {
+      "code": 6001,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds"
+    },
+    {
+      "code": 6002,
+      "name": "ListingNotActive",
+      "msg": "Listing is not active"
+    },
+    {
+      "code": 6003,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
     }
   ],
   "types": [
     {
-      "name": "Nftmarketplace",
+      "name": "Listing",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "count",
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NftMarketplace",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_percentage",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
             "type": "u8"
           }
         ]

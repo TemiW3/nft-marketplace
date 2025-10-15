@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, transfer, Transfer};
+use anchor_spl::token::{Token, transfer, Transfer, TokenAccount, Mint};
 
 use crate::state::*;
 
@@ -45,20 +45,26 @@ pub struct CreateListing<'info> {
     )]
     pub listing: Account<'info, Listing>,
 
-    /// CHECK: This is a token account that we validate in the instruction
     #[account(
-        mut,
+        seeds = [b"marketplace"],
+        bump = marketplace.bump,
+    )]
+    pub marketplace: Account<'info, NftMarketplace>,
+
+    #[account(
+        init,
+        payer = seller,
+        token::mint = mint,
+        token::authority = marketplace,
         seeds = [b"token_account", mint.key().as_ref()],
         bump,
     )]
-    pub token_account: UncheckedAccount<'info>,
+    pub token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: This is a token account that we validate in the instruction
     #[account(mut)]
-    pub seller_token_account: UncheckedAccount<'info>,
+    pub seller_token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: This is a mint account that we validate in the instruction
-    pub mint: UncheckedAccount<'info>,
+    pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }

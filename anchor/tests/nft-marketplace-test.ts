@@ -3,7 +3,7 @@ import * as anchor from '@coral-xyz/anchor'
 import { Program } from '@coral-xyz/anchor'
 import { Nftmarketplace } from '../target/types/nftmarketplace'
 import { PublicKey, Keypair, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { createMint } from '@solana/spl-token'
+import { createAssociatedTokenAccount, createMint, mintTo } from '@solana/spl-token'
 import { expect } from 'chai'
 
 describe('NFT-Marketplace', () => {
@@ -75,6 +75,54 @@ describe('NFT-Marketplace', () => {
       } catch (error: any) {
         expect(error.message).to.include('already in use')
       }
+    })
+  })
+
+  describe('Create NFT Listing', () => {
+    let sellerNftTokenAccount: PublicKey
+    let nftTokenAccountPDA: PublicKey
+    let listingPDA: PublicKey
+
+    before(async () => {
+      sellerNftTokenAccount = await createAssociatedTokenAccount(
+        connection,
+        marketplaceAuthority,
+        nftMint,
+        seller.publicKey,
+      )
+
+      await mintTo(connection, marketplaceAuthority, nftMint, sellerNftTokenAccount, marketplaceAuthority, 1)
+      ;[nftTokenAccountPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('token_account'), nftMint.toBuffer()],
+        program.programId,
+      )
+      ;[listingPDA] = PublicKey.findProgramAddressSync([Buffer.from('listing'), nftMint.toBuffer()], program.programId)
+    })
+
+    it('Creates a listing successfully', async () => {
+      const price = new anchor.BN(0.5 * LAMPORTS_PER_SOL)
+
+      await program.methods
+        .createNftListing(price)
+        .accountsStrict({
+          listing: listingPDA,
+          marketplace: marketplacePDA,
+          tokenAccount: nftTokenAccountPDA,
+          sellerTokenAccount: sellerNftTokenAccount,
+          seller: seller.publicKey,
+          mint: nftMint,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([seller])
+        .rpc()
+
+      const listingAccount = await program.account.listing.fetch(listingPDA)
+
+      expect(listingAccount.seller.toBase58()).to.equal(seller.publicKey.toBase58())
+      expect(listingAccount.mint.toBase58()).to.equal(nftMint.toBase58())
+      expect(listingAccount.price.toNumber()).to.equal(price.toNumber())
+      expect(listingAccount.isActive).to.equal(true)
     })
   })
 })

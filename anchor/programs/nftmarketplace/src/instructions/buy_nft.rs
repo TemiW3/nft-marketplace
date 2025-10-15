@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, Transfer};
+use anchor_spl::token::{Token, Transfer, TokenAccount};
 use anchor_lang::solana_program::{system_instruction::transfer, program::invoke};
 use crate::state::*;
 use crate::errors::*;
@@ -48,19 +48,18 @@ pub fn buy_nft(
         ]
     )?;
 
-    // Transfer NFT to Buyer
-    let seeds = &[
-        b"token_account",
-        listing.mint.as_ref(),
-        &[ctx.bumps.token_account],
+    // Transfer NFT to Buyer using marketplace PDA as authority
+    let marketplace_seeds = &[
+        b"marketplace".as_ref(),
+        &[marketplace.bump] as &[u8],
     ];
 
-    let signer = &[&seeds[..]];
+    let signer = &[&marketplace_seeds[..]];
 
     let cpi_accounts = Transfer {
         from: ctx.accounts.token_account.to_account_info(),
         to: ctx.accounts.buyer_token_account.to_account_info(),
-        authority: ctx.accounts.marketplace_authority.to_account_info(),
+        authority: ctx.accounts.marketplace.to_account_info(),
     };
 
     let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -91,17 +90,15 @@ pub struct BuyNft<'info> {
     )]
     pub marketplace: Account<'info, NftMarketplace>,
 
-    /// CHECK: This is a token account that we validate in the instruction
     #[account(
         mut,
         seeds = [b"token_account", listing.mint.key().as_ref()],
         bump,
     )]
-    pub token_account: UncheckedAccount<'info>,
+    pub token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: This is a token account that we validate in the instruction
     #[account(mut)]
-    pub buyer_token_account: UncheckedAccount<'info>,
+    pub buyer_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: This is not dangerous because we don't read or write from this account
     pub seller: UncheckedAccount<'info>,

@@ -23,7 +23,7 @@ pub struct InitializeMarketplace<'info> {
     #[account(
         init,
         payer = authority,
-        space = NftMarketplace::INIT_SPACE,
+        space = 8 + NftMarketplace::INIT_SPACE,
         seeds = [b"marketplace"],
         bump,
     )]

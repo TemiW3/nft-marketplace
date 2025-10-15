@@ -39,7 +39,7 @@ pub struct CreateListing<'info> {
     #[account(
         init,
         payer = seller,
-        space = Listing::INIT_SPACE,
+        space = 8 + Listing::INIT_SPACE,
         seeds = [b"listing", mint.key().as_ref()],
         bump,
     )]

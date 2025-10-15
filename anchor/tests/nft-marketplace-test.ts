@@ -59,5 +59,22 @@ describe('NFT-Marketplace', () => {
       expect(marketplaceAccount.feePercentage).to.equal(FEE_PERCENTAGE)
       expect(marketplaceAccount.bump).to.equal(marketplaceBump)
     })
+
+    it('Initialise the Marketplace Failing because one has already been created', async () => {
+      try {
+        await program.methods
+          .initializeMarketplace(FEE_PERCENTAGE)
+          .accountsStrict({
+            marketplace: marketplacePDA,
+            authority: marketplaceAuthority.publicKey,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([marketplaceAuthority])
+          .rpc()
+        expect.fail('The marketplace was created twice')
+      } catch (error: any) {
+        expect(error.message).to.include('already in use')
+      }
+    })
   })
 })

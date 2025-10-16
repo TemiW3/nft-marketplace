@@ -3,7 +3,7 @@ import * as anchor from '@coral-xyz/anchor'
 import { Program } from '@coral-xyz/anchor'
 import { Nftmarketplace } from '../target/types/nftmarketplace'
 import { PublicKey, Keypair, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { createAssociatedTokenAccount, createMint, mintTo } from '@solana/spl-token'
+import { createAssociatedTokenAccount, createMint, getAccount, mintTo } from '@solana/spl-token'
 import { expect } from 'chai'
 
 describe('NFT-Marketplace', () => {
@@ -203,6 +203,23 @@ describe('NFT-Marketplace', () => {
         })
         .signers([buyer])
         .rpc()
+
+      const updatedListing = await program.account.listing.fetch(listingPDA)
+      expect(updatedListing.isActive).to.equal(false)
+
+      const buyerNftAccount = await getAccount(connection, buyerNftTokenAccount)
+      expect(buyerNftAccount.amount).to.equal(1)
+
+      const feeAmount = Math.floor((price * FEE_PERCENTAGE) / 100)
+      const sellerProceeds = price - feeAmount
+
+      const buyerBalanceAfter = await connection.getBalance(buyer.publicKey)
+      const sellerBalanceAfter = await connection.getBalance(listing.seller)
+      const authorityBalanceAfter = await connection.getBalance(marketplaceAuthority.publicKey)
+
+      expect(buyerBalanceBefore - buyerBalanceAfter).to.be.gte(price)
+      expect(sellerBalanceAfter - sellerBalanceBefore).to.equal(sellerProceeds)
+      expect(authorityBalanceAfter - authorityBalanceBefore).to.equal(feeAmount)
     })
   })
 })

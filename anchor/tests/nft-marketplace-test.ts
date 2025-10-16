@@ -124,5 +124,40 @@ describe('NFT-Marketplace', () => {
       expect(listingAccount.price.toNumber()).to.equal(price.toNumber())
       expect(listingAccount.isActive).to.equal(true)
     })
+
+    it('Create a listing failing because of NFT not existing', async () => {
+      const fakeMint = Keypair.generate().publicKey
+      const [fakeListingPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('listing'), fakeMint.toBuffer()],
+        program.programId,
+      )
+      const [fakeNftTokenAccountPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('token_account'), fakeMint.toBuffer()],
+        program.programId,
+      )
+
+      const price = new anchor.BN(0.5 * LAMPORTS_PER_SOL)
+
+      try {
+        await program.methods
+          .createNftListing(price)
+          .accountsStrict({
+            listing: fakeListingPDA,
+            marketplace: marketplacePDA,
+            tokenAccount: fakeNftTokenAccountPDA,
+            sellerTokenAccount: sellerNftTokenAccount,
+            seller: seller.publicKey,
+            mint: fakeMint,
+            tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([seller])
+          .rpc({ skipPreflight: true })
+
+        expect.fail('Should have failed for non-existent NFT')
+      } catch (error: any) {
+        expect(error).to.exist
+      }
+    })
   })
 })

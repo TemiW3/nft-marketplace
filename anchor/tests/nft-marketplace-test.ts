@@ -160,4 +160,49 @@ describe('NFT-Marketplace', () => {
       }
     })
   })
+
+  describe('Buy NFT', () => {
+    let buyerNftTokenAccount: PublicKey
+    let listingPDA: PublicKey
+    let nftTokenAccountPDA: PublicKey
+
+    before(async () => {
+      buyerNftTokenAccount = await createAssociatedTokenAccount(
+        connection,
+        marketplaceAuthority,
+        nftMint,
+        buyer.publicKey,
+      )
+      ;[nftTokenAccountPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('token_account'), nftMint.toBuffer()],
+        program.programId,
+      )
+      ;[listingPDA] = PublicKey.findProgramAddressSync([Buffer.from('listing'), nftMint.toBuffer()], program.programId)
+    })
+
+    it('Should buy NFT successfully', async () => {
+      const listing = await program.account.listing.fetch(listingPDA)
+      const price = listing.price.toNumber()
+
+      const buyerBalanceBefore = await connection.getBalance(buyer.publicKey)
+      const sellerBalanceBefore = await connection.getBalance(listing.seller)
+      const authorityBalanceBefore = await connection.getBalance(marketplaceAuthority.publicKey)
+
+      await program.methods
+        .buy()
+        .accountsStrict({
+          listing: listingPDA,
+          marketplace: marketplacePDA,
+          tokenAccount: nftTokenAccountPDA,
+          buyerTokenAccount: buyerNftTokenAccount,
+          seller: listing.seller,
+          buyer: buyer.publicKey,
+          marketplaceAuthority: marketplaceAuthority.publicKey,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([buyer])
+        .rpc()
+    })
+  })
 })

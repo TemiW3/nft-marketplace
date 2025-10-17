@@ -58,6 +58,7 @@ export type Nftmarketplace = {
         },
         {
           "name": "marketplace",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -115,10 +116,12 @@ export type Nftmarketplace = {
           "writable": true
         },
         {
-          "name": "seller"
+          "name": "seller",
+          "writable": true
         },
         {
-          "name": "marketplaceAuthority"
+          "name": "marketplaceAuthority",
+          "writable": true
         },
         {
           "name": "tokenProgram",

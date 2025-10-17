@@ -13,7 +13,7 @@ pub fn buy_nft(
     require!(listing.is_active, NftMarketplaceError::ListingInactive);
     require!(ctx.accounts.buyer.lamports() >= listing.price, NftMarketplaceError::InsufficientFunds);
 
-    let fee_amount = listing.price * (marketplace.fee_percentage as u64) / 100;
+    let fee_amount = listing.price * (marketplace.fee_percentage as u64) / 10000;
     let seller_amount = listing.price - fee_amount;
 
     // Transfer SOL to seller
@@ -51,7 +51,7 @@ pub fn buy_nft(
     // Transfer NFT to Buyer using marketplace PDA as authority
     let marketplace_seeds = &[
         b"marketplace".as_ref(),
-        &[marketplace.bump] as &[u8],
+        &[marketplace.bump],
     ];
 
     let signer = &[&marketplace_seeds[..]];
@@ -85,6 +85,7 @@ pub struct BuyNft<'info> {
     pub listing: Account<'info, Listing>,
 
     #[account(
+        mut,
         seeds = [b"marketplace"],
         bump = marketplace.bump,
     )]
@@ -101,9 +102,11 @@ pub struct BuyNft<'info> {
     pub buyer_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(mut)]
     pub seller: UncheckedAccount<'info>,
     
     /// CHECK: This is not dangerous because we don't read or write from this account
+    #[account(mut)]
     pub marketplace_authority: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,

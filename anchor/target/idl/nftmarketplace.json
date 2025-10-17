@@ -52,6 +52,7 @@
         },
         {
           "name": "marketplace",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -109,10 +110,12 @@
           "writable": true
         },
         {
-          "name": "seller"
+          "name": "seller",
+          "writable": true
         },
         {
-          "name": "marketplace_authority"
+          "name": "marketplace_authority",
+          "writable": true
         },
         {
           "name": "token_program",

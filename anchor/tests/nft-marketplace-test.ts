@@ -195,7 +195,7 @@ describe('NFT-Marketplace', () => {
           marketplace: marketplacePDA,
           tokenAccount: nftTokenAccountPDA,
           buyerTokenAccount: buyerNftTokenAccount,
-          seller: listing.seller,
+          seller: seller.publicKey,
           buyer: buyer.publicKey,
           marketplaceAuthority: marketplaceAuthority.publicKey,
           tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
@@ -221,6 +221,30 @@ describe('NFT-Marketplace', () => {
       expect(buyerBalanceAfter).to.be.at.most(buyerBalanceBefore - price)
       expect(sellerBalanceAfter).to.be.greaterThan(sellerBalanceBefore + sellerProceeds - 1000)
       expect(authorityBalanceAfter).to.be.greaterThan(authorityBalanceBefore + feeAmount - 1000)
+    })
+
+    it('Should fail to buy NFT if listing is not active', async () => {
+      try {
+        await program.methods
+          .buy()
+          .accountsStrict({
+            listing: listingPDA,
+            marketplace: marketplacePDA,
+            tokenAccount: nftTokenAccountPDA,
+            buyerTokenAccount: buyerNftTokenAccount,
+            seller: seller.publicKey,
+            buyer: buyer.publicKey,
+            marketplaceAuthority: marketplaceAuthority.publicKey,
+            tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([buyer])
+          .rpc()
+
+        expect.fail('Should have failed to buy from inactive listing')
+      } catch (error: any) {
+        expect(error.message).to.include('Listing is inactive')
+      }
     })
   })
 })

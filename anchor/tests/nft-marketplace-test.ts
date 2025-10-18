@@ -320,5 +320,89 @@ describe('NFT-Marketplace', () => {
       const seller2NftAccount = await getAccount(connection, seller2NftTokenAccount)
       expect(seller2NftAccount.amount).to.equal(1n)
     })
+
+    it('Should fail to cancel listing by unauthorized user', async () => {
+      const seller3 = Keypair.generate()
+      const nftMint3 = await createMint(connection, marketplaceAuthority, marketplaceAuthority.publicKey, null, 0)
+
+      const airdropAmount = 2 * LAMPORTS_PER_SOL
+      await connection.requestAirdrop(seller3.publicKey, airdropAmount)
+
+      const seller3NftTokenAccount = await createAssociatedTokenAccount(
+        connection,
+        marketplaceAuthority,
+        nftMint3,
+        seller3.publicKey,
+      )
+
+      await mintTo(connection, marketplaceAuthority, nftMint3, seller3NftTokenAccount, marketplaceAuthority, 1)
+      const [listing3PDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('listing'), nftMint3.toBuffer()],
+        program.programId,
+      )
+      const [nftTokenAccount3PDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('token_account'), nftMint3.toBuffer()],
+        program.programId,
+      )
+
+      await program.methods
+        .createNftListing(new anchor.BN(1 * LAMPORTS_PER_SOL))
+        .accountsStrict({
+          listing: listing3PDA,
+          marketplace: marketplacePDA,
+          tokenAccount: nftTokenAccount3PDA,
+          sellerTokenAccount: seller3NftTokenAccount,
+          seller: seller3.publicKey,
+          mint: nftMint3,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([seller3])
+        .rpc()
+
+      try {
+        await program.methods
+          .cancelNftListing()
+          .accountsStrict({
+            listing: listing3PDA,
+            marketplace: marketplacePDA,
+            tokenAccount: nftTokenAccount3PDA,
+            mint: nftMint3,
+            sellerTokenAccount: seller3NftTokenAccount,
+            seller: seller2.publicKey, // Unauthorized user
+            tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([seller2]) // Unauthorized user
+          .rpc()
+
+        expect.fail('Unauthorized user was able to cancel the listing')
+      } catch (error: any) {
+        expect(error.message).to.include('Unauthorized')
+      }
+    })
+
+    it('Should fail to cancel inactive listing', async () => {
+      try {
+        await program.methods
+          .cancelNftListing()
+          .accountsStrict({
+            listing: listing2PDA,
+            marketplace: marketplacePDA,
+            tokenAccount: nftTokenAccount2PDA,
+            mint: nftMint2,
+            sellerTokenAccount: seller2NftTokenAccount,
+            seller: seller2.publicKey,
+            tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([seller2])
+          .rpc()
+
+        expect.fail('Should have failed to cancel inactive listing')
+      } catch (error: any) {
+        expect(error.message).to.include('Listing is not active')
+      }
+    })
   })
 })

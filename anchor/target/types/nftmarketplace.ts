@@ -153,6 +153,9 @@ export type Nftmarketplace = {
           "signer": true
         },
         {
+          "name": "mint"
+        },
+        {
           "name": "listing",
           "writable": true,
           "pda": {
@@ -171,8 +174,7 @@ export type Nftmarketplace = {
               },
               {
                 "kind": "account",
-                "path": "listing.mint",
-                "account": "listing"
+                "path": "mint"
               }
             ]
           }
@@ -225,8 +227,7 @@ export type Nftmarketplace = {
               },
               {
                 "kind": "account",
-                "path": "listing.mint",
-                "account": "listing"
+                "path": "mint"
               }
             ]
           }

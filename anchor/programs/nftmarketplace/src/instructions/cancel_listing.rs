@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, Transfer, transfer, TokenAccount};
+use anchor_spl::token::{Token, Transfer, transfer, TokenAccount, Mint};
 use crate::state::*;
 use crate::errors::*;
 
@@ -41,9 +41,11 @@ pub struct CancelListing<'info> {
     #[account(mut)]
     pub seller: Signer<'info>,
 
+    pub mint: Account<'info, Mint>,
+
     #[account(
         mut,
-        seeds = [b"listing", listing.mint.as_ref()],
+        seeds = [b"listing", mint.key().as_ref()],
         bump = listing.bump,
     )]
     pub listing: Account<'info, Listing>,
@@ -56,7 +58,7 @@ pub struct CancelListing<'info> {
 
     #[account(
         mut,
-        seeds = [b"token_account", listing.mint.as_ref()],
+        seeds = [b"token_account", mint.key().as_ref()],
         bump,
     )]
     pub token_account: Account<'info, TokenAccount>,

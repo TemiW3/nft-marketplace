@@ -5,6 +5,7 @@ import { Nftmarketplace } from '../target/types/nftmarketplace'
 import { PublicKey, Keypair, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { createAssociatedTokenAccount, createMint, getAccount, mintTo } from '@solana/spl-token'
 import { expect } from 'chai'
+import { Key } from 'react'
 
 describe('NFT-Marketplace', () => {
   const provider = anchor.AnchorProvider.env()
@@ -39,20 +40,22 @@ describe('NFT-Marketplace', () => {
       [Buffer.from('marketplace')],
       program.programId,
     )
+
+    // Initialize the marketplace
+    await program.methods
+      .initializeMarketplace(FEE_PERCENTAGE)
+      .accountsStrict({
+        marketplace: marketplacePDA,
+        authority: marketplaceAuthority.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([marketplaceAuthority])
+      .rpc()
   })
 
   describe('Initialize Marketplace', () => {
     it('Initializes the marketplace Successfully', async () => {
-      await program.methods
-        .initializeMarketplace(FEE_PERCENTAGE)
-        .accountsStrict({
-          marketplace: marketplacePDA,
-          authority: marketplaceAuthority.publicKey,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([marketplaceAuthority])
-        .rpc()
-
+      // Marketplace is already initialized in the before hook, just verify it
       const marketplaceAccount = await program.account.nftMarketplace.fetch(marketplacePDA)
 
       expect(marketplaceAccount.authority.toBase58()).to.equal(marketplaceAuthority.publicKey.toBase58())
@@ -245,6 +248,77 @@ describe('NFT-Marketplace', () => {
       } catch (error: any) {
         expect(error.message).to.include('Listing is inactive')
       }
+    })
+  })
+
+  describe('Cancel Listing', () => {
+    let seller2: Keypair
+    let nftMint2: PublicKey
+    let seller2NftTokenAccount: PublicKey
+    let nftTokenAccount2PDA: PublicKey
+    let listing2PDA: PublicKey
+
+    before(async () => {
+      seller2 = Keypair.generate()
+      await provider.connection.requestAirdrop(seller2.publicKey, 10 * LAMPORTS_PER_SOL)
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      nftMint2 = await createMint(connection, marketplaceAuthority, marketplaceAuthority.publicKey, null, 0)
+
+      seller2NftTokenAccount = await createAssociatedTokenAccount(
+        connection,
+        marketplaceAuthority,
+        nftMint2,
+        seller2.publicKey,
+      )
+
+      await mintTo(connection, marketplaceAuthority, nftMint2, seller2NftTokenAccount, marketplaceAuthority, 1)
+      ;[nftTokenAccount2PDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('token_account'), nftMint2.toBuffer()],
+        program.programId,
+      )
+      ;[listing2PDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('listing'), nftMint2.toBuffer()],
+        program.programId,
+      )
+
+      await program.methods
+        .createNftListing(new anchor.BN(1 * LAMPORTS_PER_SOL))
+        .accountsStrict({
+          listing: listing2PDA,
+          marketplace: marketplacePDA,
+          tokenAccount: nftTokenAccount2PDA,
+          sellerTokenAccount: seller2NftTokenAccount,
+          seller: seller2.publicKey,
+          mint: nftMint2,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([seller2])
+        .rpc()
+    })
+
+    it('Should cancel a listing successfully', async () => {
+      await program.methods
+        .cancelNftListing()
+        .accountsStrict({
+          listing: listing2PDA,
+          marketplace: marketplacePDA,
+          tokenAccount: nftTokenAccount2PDA,
+          mint: nftMint2,
+          sellerTokenAccount: seller2NftTokenAccount,
+          seller: seller2.publicKey,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([seller2])
+        .rpc()
+
+      const listingAccount = await program.account.listing.fetch(listing2PDA)
+      expect(listingAccount.isActive).to.equal(false)
+
+      const seller2NftAccount = await getAccount(connection, seller2NftTokenAccount)
+      expect(seller2NftAccount.amount).to.equal(1n)
     })
   })
 })

@@ -147,6 +147,9 @@
           "signer": true
         },
         {
+          "name": "mint"
+        },
+        {
           "name": "listing",
           "writable": true,
           "pda": {
@@ -165,8 +168,7 @@
               },
               {
                 "kind": "account",
-                "path": "listing.mint",
-                "account": "Listing"
+                "path": "mint"
               }
             ]
           }
@@ -219,8 +221,7 @@
               },
               {
                 "kind": "account",
-                "path": "listing.mint",
-                "account": "Listing"
+                "path": "mint"
               }
             ]
           }

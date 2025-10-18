@@ -7,7 +7,7 @@ pub mod errors;
 
 use instructions::*;
 
-declare_id!("Count3AcZucFDPSFBAeHkQ6AvttieKUkyJ8HiQGhQwe");
+declare_id!("EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW");
 
 #[program]
 pub mod nftmarketplace {

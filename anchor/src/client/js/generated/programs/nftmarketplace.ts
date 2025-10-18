@@ -22,7 +22,7 @@ import {
 } from '../instructions';
 
 export const NFTMARKETPLACE_PROGRAM_ADDRESS =
-  'Count3AcZucFDPSFBAeHkQ6AvttieKUkyJ8HiQGhQwe' as Address<'Count3AcZucFDPSFBAeHkQ6AvttieKUkyJ8HiQGhQwe'>;
+  'EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW' as Address<'EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW'>;
 
 export enum NftmarketplaceAccount {
   Nftmarketplace,
@@ -121,7 +121,7 @@ export function identifyNftmarketplaceInstruction(
 }
 
 export type ParsedNftmarketplaceInstruction<
-  TProgram extends string = 'Count3AcZucFDPSFBAeHkQ6AvttieKUkyJ8HiQGhQwe',
+  TProgram extends string = 'EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW',
 > =
   | ({
       instructionType: NftmarketplaceInstruction.Close;

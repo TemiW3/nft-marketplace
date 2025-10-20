@@ -33,3 +33,27 @@ export const useMarketplace = () => {
   }
   return context
 }
+
+interface MarketplaceProviderProps {
+  children: ReactNode
+}
+
+export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ children }) => {
+  const { connection } = useConnection()
+  const wallet = useWallet()
+  const [program, setProgram] = useState<Program | null>(null)
+  const [listings, setListings] = useState<Listing[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const value: MarketplaceContextType = {
+    program,
+    listings,
+    loading,
+    createListing,
+    buyNft,
+    cancelListing,
+    refreshListings,
+  }
+
+  return <MarketplaceContext.Provider value={value}>{children}</MarketplaceContext.Provider>
+}

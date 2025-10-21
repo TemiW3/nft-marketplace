@@ -4,6 +4,7 @@ import { PublicKey, SystemProgram } from '@solana/web3.js'
 import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor'
 
 import MARKETPLACE_IDL from '../idl/nftmarketplace.json'
+const PROGRAM_ID = new PublicKey('EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW')
 
 interface Listing {
   seller: PublicKey
@@ -44,6 +45,44 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
   const [program, setProgram] = useState<Program | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (wallet && connection && wallet.signTransaction) {
+      const provider = new AnchorProvider(connection, wallet as any, {})
+      const programInstance = new Program(MARKETPLACE_IDL as any, provider)
+      setProgram(programInstance)
+    }
+  }, [wallet, connection])
+
+  const refreshListings = async () => {
+    if (!program) return
+
+    setLoading(true)
+    try {
+      const listingAccounts = await (program as any).account.listing.all()
+      const listingsData = listingAccounts
+        .filter((account: any) => account.account.isActive)
+        .map((account: any) => ({
+          seller: account.account.seller,
+          nftMint: account.account.nftMint,
+          nftTokenAccount: account.account.nftTokenAccount,
+          price: account.account.price.toNumber(),
+          isActive: account.account.isActive,
+          bump: account.account.bump,
+        }))
+      setListings(listingsData)
+    } catch (error) {
+      console.error('Error fetching listings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (program) {
+      refreshListings()
+    }
+  }, [program])
 
   const value: MarketplaceContextType = {
     program,

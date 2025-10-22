@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, SystemProgram } from '@solana/web3.js'
-import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor'
+import { Program, AnchorProvider, web3, BN } from '@coral-xyz/anchor'
 
 import MARKETPLACE_IDL from '../idl/nftmarketplace.json'
 const PROGRAM_ID = new PublicKey('EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW')
@@ -87,8 +87,13 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
         program.programId,
       )
 
+      const [marketplacePDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('marketplace'), nftMint.toBuffer()],
+        program.programId,
+      )
+
       const [nftTokenAccountPDA] = PublicKey.findProgramAddressSync(
-        [Buffer.from('nft_token_account'), nftMint.toBuffer()],
+        [Buffer.from('token_account'), nftMint.toBuffer()],
         program.programId,
       )
 
@@ -102,13 +107,14 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
       const userNftTokenAccount = userNftTokenAccounts.value[0].pubkey
 
       await program.methods
-        .createNftListing(new web3.BN(price))
+        .createNftListing(new BN(price))
         .accounts({
           listing: listingPDA,
-          nftTokenAccount: nftTokenAccountPDA,
-          sellerNftTokenAccount: userNftTokenAccount,
+          marketplace: marketplacePDA,
+          tokenAccount: nftTokenAccountPDA,
+          sellerTokenAccount: userNftTokenAccount,
           seller: wallet.publicKey,
-          nftMint: nftMint,
+          mint: nftMint,
           tokenProgram: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
           systemProgram: SystemProgram.programId,
         })

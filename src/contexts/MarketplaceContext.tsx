@@ -78,6 +78,49 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     }
   }
 
+  const createListing = async (nftMint: PublicKey, price: number) => {
+    if (!program || !wallet.publicKey) return
+
+    try {
+      const [listingPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('listing'), nftMint.toBuffer()],
+        program.programId,
+      )
+
+      const [nftTokenAccountPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('nft_token_account'), nftMint.toBuffer()],
+        program.programId,
+      )
+
+      // Get the user's NFT token account
+      const userNftTokenAccounts = await connection.getTokenAccountsByOwner(wallet.publicKey, { mint: nftMint })
+
+      if (userNftTokenAccounts.value.length === 0) {
+        throw new Error('No NFT token account found')
+      }
+
+      const userNftTokenAccount = userNftTokenAccounts.value[0].pubkey
+
+      await program.methods
+        .createNftListing(new web3.BN(price))
+        .accounts({
+          listing: listingPDA,
+          nftTokenAccount: nftTokenAccountPDA,
+          sellerNftTokenAccount: userNftTokenAccount,
+          seller: wallet.publicKey,
+          nftMint: nftMint,
+          tokenProgram: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
+
+      await refreshListings()
+    } catch (error) {
+      console.error('Error creating listing:', error)
+      throw error
+    }
+  }
+
   useEffect(() => {
     if (program) {
       refreshListings()

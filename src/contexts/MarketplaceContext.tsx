@@ -5,6 +5,7 @@ import { Program, AnchorProvider, web3, BN } from '@coral-xyz/anchor'
 
 import MARKETPLACE_IDL from '../idl/nftmarketplace.json'
 const PROGRAM_ID = new PublicKey('EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW')
+const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
 
 interface Listing {
   seller: PublicKey
@@ -115,7 +116,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
           sellerTokenAccount: userNftTokenAccount,
           seller: wallet.publicKey,
           mint: nftMint,
-          tokenProgram: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+          tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
         .rpc()

@@ -18,3 +18,5 @@ function App() {
     </WalletContextProvider>
   )
 }
+
+export default App

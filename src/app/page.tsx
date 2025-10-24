@@ -1,5 +1,5 @@
-import DashboardFeature from '@/features/dashboard/dashboard-feature'
+import Hero from '@/components/Hero'
 
 export default function Home() {
-  return <DashboardFeature />
+  return <Hero />
 }

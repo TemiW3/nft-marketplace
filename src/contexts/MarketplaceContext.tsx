@@ -1,3 +1,4 @@
+'use client'
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, SystemProgram } from '@solana/web3.js'
@@ -21,8 +22,8 @@ interface MarketplaceContextType {
   listings: Listing[]
   loading: boolean
   createListing: (nftMint: PublicKey, price: number) => Promise<void>
-  buyNft: (listing: Listing) => Promise<void>
-  cancelListing: (listing: Listing) => Promise<void>
+  //   buyNft: (listing: Listing) => Promise<void>
+  //   cancelListing: (listing: Listing) => Promise<void>
   refreshListings: () => Promise<void>
 }
 
@@ -139,8 +140,8 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     listings,
     loading,
     createListing,
-    buyNft,
-    cancelListing,
+    // buyNft,
+    // cancelListing,
     refreshListings,
   }
 

@@ -1,21 +1,22 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
+import '@/components/Header.css'
+import '@/components/Hero.css'
 import { WalletContextProvider } from '@/contexts/WalletContext'
 import { MarketplaceProvider } from '@/contexts/MarketplaceContext'
 import Header from '@/components/Header'
-import React from 'react'
 
 export const metadata: Metadata = {
-  title: 'NFT Marketplace',
-  description: 'Discover, Create & Trade Unique NFTs on Solana',
+  title: 'NFT Marketplace | Solana',
+  description: 'Discover, Create & Trade Unique NFTs on Solana with lightning-fast transactions and minimal fees.',
+  keywords: ['NFT', 'Solana', 'Marketplace', 'Blockchain', 'Digital Art'],
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased`}>
-        {/* <AppProviders> */}
+      <body>
         <WalletContextProvider>
           <MarketplaceProvider>
             <div className="App">
@@ -24,7 +25,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </div>
           </MarketplaceProvider>
         </WalletContextProvider>
-        {/* </AppProviders> */}
       </body>
     </html>
   )

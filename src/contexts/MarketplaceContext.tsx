@@ -12,7 +12,7 @@ const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ
 interface Listing {
   seller: PublicKey
   mint: PublicKey
-  nftTokenAccount: PublicKey
+  tokenAccount: PublicKey
   price: number
   isActive: boolean
   bump: number
@@ -68,7 +68,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
         .map((account: any) => ({
           seller: account.account.seller,
           nftMint: account.account.nftMint,
-          nftTokenAccount: account.account.nftTokenAccount,
+          tokenAccount: account.account.tokenAccount,
           price: account.account.price.toNumber(),
           isActive: account.account.isActive,
           bump: account.account.bump,
@@ -173,7 +173,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
         .accounts({
           listing: listingPDA,
           marketplace: marketplacePDA,
-          tokenAccount: listing.nftTokenAccount,
+          tokenAccount: listing.tokenAccount,
           buyerNftTokenAccount: buyerNftTokenAccount,
           buyer: wallet.publicKey,
           seller: listing.seller,

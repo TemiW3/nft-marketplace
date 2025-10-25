@@ -1,0 +1,212 @@
+/* NFT Card */
+.nft-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.nft-card:hover {
+  border-color: var(--primary-purple);
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.1);
+  transform: translateY(-8px);
+}
+
+.nft-image {
+  width: 100%;
+  height: 250px;
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-green) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+}
+
+.nft-content {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nft-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-white);
+}
+
+.nft-mint {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  margin-bottom: 20px;
+  font-family: monospace;
+}
+
+.nft-price {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--primary-green);
+  margin-bottom: 16px;
+}
+
+.nft-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 24px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  color: var(--text-white);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-gray);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.3s ease;
+}
+
+.modal-close:hover {
+  color: var(--accent-red);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-nft-preview {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.modal-nft-image {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-green) 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+}
+
+.modal-nft-preview h3 {
+  font-size: 1.25rem;
+  color: var(--text-white);
+  margin: 0;
+}
+
+.marketplace-fee {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.marketplace-fee p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.modal-footer {
+  padding: 24px;
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-footer .btn {
+  min-width: 120px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,137 @@
+.my-nfts-page {
+  padding: 40px 0;
+  min-height: calc(100vh - 80px);
+}
+
+/* Connect Wallet Prompt */
+.connect-wallet-prompt {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--bg-card);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  max-width: 500px;
+  margin: 60px auto;
+}
+
+.prompt-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.connect-wallet-prompt h2 {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  color: var(--text-white);
+}
+
+/* Tabs */
+.tabs-container {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin: 40px 0;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: var(--bg-card);
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-radius: 16px;
+  padding: 16px 32px;
+  color: var(--text-gray);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+  justify-content: center;
+}
+
+.tab:hover {
+  border-color: var(--primary-purple);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.1);
+}
+
+.tab.active {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--secondary-purple) 100%);
+  border-color: var(--primary-purple);
+  color: var(--text-white);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+}
+
+.tab-icon {
+  font-size: 20px;
+}
+
+.tab-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tab.active .tab-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Tab Content */
+.tab-content {
+  margin-top: 40px;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.nfts-section {
+  min-height: 400px;
+}
+
+.section-description {
+  text-align: center;
+  margin-bottom: 32px;
+  font-size: 16px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 100px 20px;
+  background: var(--bg-card);
+  border: 1px dashed rgba(139, 92, 246, 0.3);
+  border-radius: 20px;
+  margin: 40px auto;
+  max-width: 600px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: var(--text-white);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tabs-container {
+    flex-direction: column;
+    padding: 0 20px;
+  }
+
+  .tab {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .my-nfts-page {
+    padding: 20px 0;
+  }
+}

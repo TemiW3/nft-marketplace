@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, SystemProgram } from '@solana/web3.js'
 import { Program, AnchorProvider, web3, BN } from '@coral-xyz/anchor'
+import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token'
 
 import MARKETPLACE_IDL from '../idl/nftmarketplace.json'
 const PROGRAM_ID = new PublicKey('EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW')
@@ -10,7 +11,7 @@ const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ
 
 interface Listing {
   seller: PublicKey
-  nftMint: PublicKey
+  mint: PublicKey
   nftTokenAccount: PublicKey
   price: number
   isActive: boolean
@@ -22,7 +23,7 @@ interface MarketplaceContextType {
   listings: Listing[]
   loading: boolean
   createListing: (nftMint: PublicKey, price: number) => Promise<void>
-  //   buyNft: (listing: Listing) => Promise<void>
+  buyNft: (listing: Listing) => Promise<void>
   //   cancelListing: (listing: Listing) => Promise<void>
   refreshListings: () => Promise<void>
 }
@@ -129,6 +130,71 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     }
   }
 
+  const buyNft = async (listing: Listing) => {
+    if (!program || !wallet.publicKey) return
+    try {
+      const [marketplacePDA] = PublicKey.findProgramAddressSync([Buffer.from('marketplace')], program.programId)
+
+      const [listingPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('listing'), listing.mint.toBuffer()],
+        program.programId,
+      )
+
+      const buyerNftTokenAccounts = await connection.getTokenAccountsByOwner(wallet.publicKey, { mint: listing.mint })
+
+      let buyerNftTokenAccount: PublicKey
+      let createTokenAccountInstruction: web3.TransactionInstruction | null = null
+
+      if (buyerNftTokenAccounts.value.length === 0) {
+        buyerNftTokenAccount = await getAssociatedTokenAddress(listing.mint, wallet.publicKey, false, TOKEN_PROGRAM_ID)
+
+        createTokenAccountInstruction = createAssociatedTokenAccountInstruction(
+          wallet.publicKey,
+          buyerNftTokenAccount,
+          wallet.publicKey,
+          listing.mint,
+          TOKEN_PROGRAM_ID,
+        )
+      } else {
+        buyerNftTokenAccount = buyerNftTokenAccounts.value[0].pubkey
+      }
+
+      const marketplaceAccount = await program.account.marketplace.fetch(marketplacePDA)
+      const marketplaceAuthority = marketplaceAccount.authority as PublicKey
+
+      const transaction = new web3.Transaction()
+
+      if (createTokenAccountInstruction) {
+        transaction.add(createTokenAccountInstruction)
+      }
+
+      const buyNftInstruction = await program.methods
+        .buy()
+        .accounts({
+          listing: listingPDA,
+          marketplace: marketplacePDA,
+          tokenAccount: listing.nftTokenAccount,
+          buyerNftTokenAccount: buyerNftTokenAccount,
+          buyer: wallet.publicKey,
+          seller: listing.seller,
+          marketplaceAuthority: marketplaceAuthority,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .instruction()
+
+      transaction.add(buyNftInstruction)
+
+      const signature = await wallet.sendTransaction(transaction, connection)
+      await connection.confirmTransaction(signature, 'processed')
+
+      await refreshListings()
+    } catch (error) {
+      console.error('Error buying NFT:', error)
+      throw error
+    }
+  }
+
   useEffect(() => {
     if (program) {
       refreshListings()
@@ -140,7 +206,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     listings,
     loading,
     createListing,
-    // buyNft,
+    buyNft,
     // cancelListing,
     refreshListings,
   }

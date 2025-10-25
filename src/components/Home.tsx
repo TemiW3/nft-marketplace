@@ -1,19 +1,19 @@
 import React from 'react'
-import './Hero.css'
+import './Home.css'
 
-const Hero: React.FC = () => {
+const Home: React.FC = () => {
   return (
-    <section className="hero">
-      <div className="hero-content">
-        <h1 className="hero-title">
+    <section className="home">
+      <div className="home-content">
+        <h1 className="home-title">
           Discover, Create & Trade
-          <span className="hero-highlight"> Unique NFTs</span>
+          <span className="home-highlight"> Unique NFTs</span>
         </h1>
-        <p className="hero-description">
+        <p className="home-description">
           Experience the future of digital ownership on Solana. Buy, sell, and discover amazing NFTs with lightning-fast
           transactions and minimal fees.
         </p>
-        <div className="hero-stats">
+        <div className="home-stats">
           <div className="stat">
             <div className="stat-number">10K+</div>
             <div className="stat-label">NFTs Listed</div>
@@ -32,4 +32,4 @@ const Hero: React.FC = () => {
   )
 }
 
-export default Hero
+export default Home

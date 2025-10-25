@@ -24,7 +24,7 @@ interface MarketplaceContextType {
   loading: boolean
   createListing: (nftMint: PublicKey, price: number) => Promise<void>
   buyNft: (listing: Listing) => Promise<void>
-  //   cancelListing: (listing: Listing) => Promise<void>
+  cancelListing: (listing: Listing) => Promise<void>
   refreshListings: () => Promise<void>
 }
 
@@ -195,6 +195,46 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     }
   }
 
+  const cancelListing = async (listing: Listing) => {
+    if (!program || !wallet.publicKey) return
+
+    try {
+      const [marketplacePDA] = PublicKey.findProgramAddressSync([Buffer.from('marketplace')], program.programId)
+
+      const [listingPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from('listing'), listing.mint.toBuffer()],
+        program.programId,
+      )
+
+      // Get the seller's NFT token account
+      const sellerNftTokenAccounts = await connection.getTokenAccountsByOwner(wallet.publicKey, { mint: listing.mint })
+      if (sellerNftTokenAccounts.value.length === 0) {
+        throw new Error('Seller NFT token account not found')
+      }
+
+      const sellerNftTokenAccount = sellerNftTokenAccounts.value[0].pubkey
+
+      await program.methods
+        .cancelNftListing()
+        .accounts({
+          listing: listingPDA,
+          tokenAccount: listing.tokenAccount,
+          marketplace: marketplacePDA,
+          mint: listing.mint,
+          sellerTokenAccount: sellerNftTokenAccount,
+          seller: wallet.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
+
+      await refreshListings()
+    } catch (error) {
+      console.error('Error canceling NFT listing:', error)
+      throw error
+    }
+  }
+
   useEffect(() => {
     if (program) {
       refreshListings()
@@ -207,7 +247,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     loading,
     createListing,
     buyNft,
-    // cancelListing,
+    cancelListing,
     refreshListings,
   }
 

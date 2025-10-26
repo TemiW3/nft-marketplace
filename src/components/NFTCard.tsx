@@ -1,12 +1,16 @@
 'use client'
 import React, { useState } from 'react'
+import Image from 'next/image'
 import './NFTCard.css'
 
 interface NFT {
   mint: string
   name: string
   image: string
-  price: number | null
+  description?: string
+  symbol?: string
+  price?: number | null
+  uri?: string
 }
 
 interface NFTCardProps {
@@ -54,7 +58,13 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
   return (
     <>
       <div className="nft-card">
-        <div className="nft-image">{nft.image}</div>
+        <div className="nft-image">
+          {nft.image && nft.image.startsWith('http') ? (
+            <Image src={nft.image} alt={nft.name} fill style={{ objectFit: 'cover' }} />
+          ) : (
+            <div className="nft-image-placeholder">🎨</div>
+          )}
+        </div>
         <div className="nft-content">
           <h3 className="nft-title">{nft.name}</h3>
           <p className="nft-mint">

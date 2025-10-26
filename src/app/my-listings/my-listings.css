@@ -3,6 +3,23 @@
   min-height: calc(100vh - 80px);
 }
 
+/* Error Message */
+.error-message {
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid var(--accent-red);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 20px auto;
+  max-width: 600px;
+  text-align: center;
+}
+
+.error-message p {
+  color: var(--accent-red);
+  margin: 0;
+  font-weight: 500;
+}
+
 /* Connect Wallet Prompt */
 .connect-wallet-prompt {
   text-align: center;

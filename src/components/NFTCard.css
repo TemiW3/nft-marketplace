@@ -23,6 +23,16 @@
   align-items: center;
   justify-content: center;
   font-size: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nft-image img {
+  object-fit: cover;
+}
+
+.nft-image-placeholder {
+  font-size: 80px;
 }
 
 .nft-content {

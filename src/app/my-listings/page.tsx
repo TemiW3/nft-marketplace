@@ -7,7 +7,7 @@ import NFTCard from '@/components/NFTCard'
 import { useUserNFTs } from '@/hooks/useUserNFTs'
 import './my-listings.css'
 import { Nftmarketplace } from '../../../anchor/target/types/nftmarketplace'
-import idl from '../../../anchor/target/idl/nftmarketplace.json'
+import idl from '../../idl/nftmarketplace.json'
 
 export default function MyListingsPage() {
   const wallet = useWallet()

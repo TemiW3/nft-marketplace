@@ -26,6 +26,7 @@ interface MarketplaceContextType {
   buyNft: (listing: Listing) => Promise<void>
   cancelListing: (listing: Listing) => Promise<void>
   refreshListings: () => Promise<void>
+  initializeMarketplace: (feePercentage: number) => Promise<void>
 }
 
 const MarketplaceContext = createContext<MarketplaceContextType | undefined>(undefined)
@@ -235,6 +236,26 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     }
   }
 
+  const initializeMarketplace = async (feePercentage: number) => {
+    if (!program || !wallet.publicKey) return
+
+    try {
+      const [marketplacePDA] = PublicKey.findProgramAddressSync([Buffer.from('marketplace')], program.programId)
+
+      await program.methods
+        .initializeMarketplace(feePercentage)
+        .accounts({
+          marketplace: marketplacePDA,
+          authority: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
+    } catch (error) {
+      console.error('Error initializing marketplace:', error)
+      throw error
+    }
+  }
+
   useEffect(() => {
     if (program) {
       refreshListings()
@@ -249,6 +270,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
     buyNft,
     cancelListing,
     refreshListings,
+    initializeMarketplace,
   }
 
   return <MarketplaceContext.Provider value={value}>{children}</MarketplaceContext.Provider>

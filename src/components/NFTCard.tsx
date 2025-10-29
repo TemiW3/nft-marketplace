@@ -100,8 +100,10 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
             </div>
             <div className="modal-body">
               <div className="modal-nft-preview">
-                <div className="modal-nft-image">{nft.image}</div>
-                <h3>{nft.name}</h3>
+                <div className="modal-nft-image">
+                  <Image src={nft.image} alt={nft.name} fill style={{ objectFit: 'cover' }} />
+                </div>
+                {/* <h3>{nft.name}</h3> */}
               </div>
               <div className="form-group">
                 <label>Price (SOL)</label>
@@ -117,9 +119,9 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
               </div>
               <div className="marketplace-fee">
                 <p className="text-gray">
-                  Marketplace Fee (2.5%): {price ? (parseFloat(price) * 0.025).toFixed(4) : '0'} SOL
+                  Marketplace Fee (2%): {price ? (parseFloat(price) * 0.02).toFixed(4) : '0'} SOL
                 </p>
-                <p className="text-white">You'll receive: {price ? (parseFloat(price) * 0.975).toFixed(4) : '0'} SOL</p>
+                <p className="text-white">You'll receive: {price ? (parseFloat(price) * 0.98).toFixed(4) : '0'} SOL</p>
               </div>
             </div>
             <div className="modal-footer">

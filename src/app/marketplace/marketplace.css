@@ -138,18 +138,21 @@
 
 /* NFT Card */
 .marketplace-nft-card {
-  background: var(--card-background);
-  border-radius: 16px;
+  background: var(--bg-card, #1e1e1e);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .marketplace-nft-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-purple, #8b5cf6);
 }
 
 .nft-image-container {
@@ -158,10 +161,13 @@
   height: 300px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
-.nft-image {
+.marketplace-nft-card .nft-image {
   object-fit: cover;
+  width: 100%;
+  height: 100%;
 }
 
 .nft-image-placeholder {
@@ -366,5 +372,204 @@
 @media (min-width: 769px) and (max-width: 1024px) {
   .marketplace-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: var(--bg-card, #1e1e1e);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 24px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  position: relative;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--text-white, #fff);
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.modal-image-container {
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24px 0 0 24px;
+  overflow: hidden;
+}
+
+.modal-image {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
+.modal-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.modal-image-placeholder span {
+  font-size: 80px;
+  margin-bottom: 16px;
+}
+
+.modal-image-placeholder p {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.modal-details {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-white, #fff);
+}
+
+.modal-description {
+  font-size: 15px;
+  color: var(--text-gray, #a0a0a0);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.modal-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: rgba(139, 92, 246, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.modal-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-info-label {
+  font-size: 12px;
+  color: var(--text-gray, #a0a0a0);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.modal-info-value {
+  font-size: 16px;
+  color: var(--text-white, #fff);
+  font-weight: 600;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-buy-btn {
+  width: 100%;
+  margin-top: auto;
+  padding: 16px 32px;
+  font-size: 16px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+  .modal-content {
+    grid-template-columns: 1fr;
+    max-height: 95vh;
+  }
+
+  .modal-image-container {
+    min-height: 300px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .modal-details {
+    padding: 24px;
+  }
+
+  .modal-title {
+    font-size: 24px;
+  }
+
+  .modal-close {
+    top: 12px;
+    right: 12px;
   }
 }

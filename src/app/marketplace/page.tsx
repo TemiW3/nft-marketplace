@@ -35,6 +35,8 @@ export default function MarketplacePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const [feePercentage, setFeePercentage] = useState<string>('2')
+  const [selectedNFT, setSelectedNFT] = useState<NFTListing | null>(null)
+  const [showModal, setShowModal] = useState(false)
 
   // Check if marketplace is initialized
   useEffect(() => {
@@ -97,7 +99,12 @@ export default function MarketplacePage() {
 
               if (nft.json) {
                 name = nft.json.name || name
-                image = nft.json.image || ''
+                // Clean up image URL - remove @ prefix if present
+                let rawImage = nft.json.image || ''
+                if (rawImage.startsWith('@')) {
+                  rawImage = rawImage.substring(1)
+                }
+                image = rawImage
                 description = nft.json.description || ''
               }
 
@@ -181,6 +188,16 @@ export default function MarketplacePage() {
     }
   }
 
+  const openNFTModal = (listing: NFTListing) => {
+    setSelectedNFT(listing)
+    setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setSelectedNFT(null)
+  }
+
   const handleBuyNFT = async (listing: NFTListing) => {
     if (!publicKey || !connected) {
       alert('Please connect your wallet first')
@@ -220,11 +237,18 @@ export default function MarketplacePage() {
         .rpc()
 
       alert('NFT purchased successfully!')
+      closeModal()
       // Refresh listings
       window.location.reload()
     } catch (err: any) {
       console.error('Error buying NFT:', err)
       alert(err.message || 'Failed to purchase NFT')
+    }
+  }
+
+  const handleBuyFromModal = () => {
+    if (selectedNFT) {
+      handleBuyNFT(selectedNFT)
     }
   }
 
@@ -345,10 +369,17 @@ export default function MarketplacePage() {
 
           <div className="marketplace-grid">
             {currentListings.map((listing) => (
-              <div key={listing.mint} className="marketplace-nft-card">
+              <div key={listing.mint} className="marketplace-nft-card" onClick={() => openNFTModal(listing)}>
                 <div className="nft-image-container">
                   {listing.image ? (
-                    <Image src={listing.image} alt={listing.name} fill className="nft-image" />
+                    <Image
+                      src={listing.image}
+                      alt={listing.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      style={{ objectFit: 'cover' }}
+                      className="nft-image"
+                    />
                   ) : (
                     <div className="nft-image-placeholder">
                       <span>🖼️</span>
@@ -371,17 +402,6 @@ export default function MarketplacePage() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    className="btn-primary"
-                    onClick={() => handleBuyNFT(listing)}
-                    disabled={!connected || listing.seller === publicKey?.toString()}
-                  >
-                    {!connected
-                      ? 'Connect Wallet'
-                      : listing.seller === publicKey?.toString()
-                        ? 'Your Listing'
-                        : 'Buy NFT'}
-                  </button>
                 </div>
               </div>
             ))}
@@ -416,6 +436,67 @@ export default function MarketplacePage() {
             </div>
           )}
         </>
+      )}
+
+      {/* NFT Detail Modal */}
+      {showModal && selectedNFT && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeModal}>
+              ✕
+            </button>
+            <div className="modal-image-container">
+              {selectedNFT.image ? (
+                <Image
+                  src={selectedNFT.image}
+                  alt={selectedNFT.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  style={{ objectFit: 'contain' }}
+                  className="modal-image"
+                />
+              ) : (
+                <div className="modal-image-placeholder">
+                  <span>🖼️</span>
+                  <p>No Image</p>
+                </div>
+              )}
+            </div>
+            <div className="modal-details">
+              <h2 className="modal-title">{selectedNFT.name}</h2>
+              {selectedNFT.description && <p className="modal-description">{selectedNFT.description}</p>}
+              <div className="modal-info-grid">
+                <div className="modal-info-item">
+                  <span className="modal-info-label">Price</span>
+                  <span className="modal-info-value">{(selectedNFT.price / 1e9).toFixed(2)} SOL</span>
+                </div>
+                <div className="modal-info-item">
+                  <span className="modal-info-label">Seller</span>
+                  <span className="modal-info-value" title={selectedNFT.seller}>
+                    {selectedNFT.seller.slice(0, 8)}...{selectedNFT.seller.slice(-8)}
+                  </span>
+                </div>
+                <div className="modal-info-item">
+                  <span className="modal-info-label">Mint Address</span>
+                  <span className="modal-info-value" title={selectedNFT.mint}>
+                    {selectedNFT.mint.slice(0, 8)}...{selectedNFT.mint.slice(-8)}
+                  </span>
+                </div>
+              </div>
+              <button
+                className="btn-primary modal-buy-btn"
+                onClick={handleBuyFromModal}
+                disabled={!connected || selectedNFT.seller === publicKey?.toString()}
+              >
+                {!connected
+                  ? 'Connect Wallet to Buy'
+                  : selectedNFT.seller === publicKey?.toString()
+                    ? 'This is Your Listing'
+                    : `Buy for ${(selectedNFT.price / 1e9).toFixed(2)} SOL`}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

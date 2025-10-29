@@ -22,6 +22,7 @@ interface NFTCardProps {
 
 export default function NFTCard({ nft, type }: NFTCardProps) {
   const [showListModal, setShowListModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [price, setPrice] = useState('')
   const [loading, setLoading] = useState(false)
   const { createListing, cancelListing, nftListings } = useMarketplace()
@@ -73,7 +74,11 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
 
   return (
     <>
-      <div className="nft-card">
+      <div
+        className="nft-card"
+        onClick={() => (type === 'listed' ? setShowDetailsModal(true) : setShowListModal(true))}
+        style={{ cursor: 'pointer' }}
+      >
         <div className="nft-image">
           {nft.image && nft.image.startsWith('http') ? (
             <Image src={nft.image} alt={nft.name} fill style={{ objectFit: 'cover' }} />
@@ -88,18 +93,18 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
           </p>
 
           {type === 'available' ? (
-            <button className="btn btn-primary btn-full" onClick={() => setShowListModal(true)} disabled={loading}>
+            <button
+              className="btn btn-primary btn-full"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowListModal(true)
+              }}
+              disabled={loading}
+            >
               📋 List for Sale
             </button>
           ) : (
-            <>
-              <div className="nft-price">{nft.price} SOL</div>
-              <div className="nft-actions">
-                <button className="btn btn-danger btn-small btn-full" onClick={handleCancelListing} disabled={loading}>
-                  {loading ? 'Canceling...' : '❌ Cancel Listing'}
-                </button>
-              </div>
-            </>
+            <div className="nft-price">{nft.price} SOL</div>
           )}
         </div>
       </div>
@@ -107,25 +112,36 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
       {/* List Modal */}
       {showListModal && (
         <div className="modal-overlay" onClick={() => setShowListModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>List NFT for Sale</h2>
-              <button className="modal-close" onClick={() => setShowListModal(false)}>
-                ✕
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="modal-nft-preview">
-                <div className="modal-nft-image">
-                  <Image src={nft.image} alt={nft.name} fill style={{ objectFit: 'cover' }} />
+          <div className="modal-content-large" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowListModal(false)}>
+              ✕
+            </button>
+            <div className="modal-image-container-large">
+              {nft.image && nft.image.startsWith('http') ? (
+                <Image
+                  src={nft.image}
+                  alt={nft.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  style={{ objectFit: 'contain' }}
+                  className="modal-image"
+                />
+              ) : (
+                <div className="modal-image-placeholder-large">
+                  <span>🖼️</span>
+                  <p>No Image</p>
                 </div>
-                {/* <h3>{nft.name}</h3> */}
-              </div>
-              <div className="form-group">
-                <label>Price (SOL)</label>
+              )}
+            </div>
+            <div className="modal-details-large">
+              <h2 className="modal-title-large">List NFT for Sale</h2>
+              <p className="modal-description-large">{nft.name}</p>
+
+              <div className="form-group-large">
+                <label className="form-label-large">Price (SOL)</label>
                 <input
                   type="number"
-                  className="input"
+                  className="form-input-large"
                   placeholder="Enter price in SOL"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
@@ -133,23 +149,95 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
                   min="0"
                 />
               </div>
-              <div className="marketplace-fee">
-                <p className="text-gray">
-                  Marketplace Fee (2%): {price ? (parseFloat(price) * 0.02).toFixed(4) : '0'} SOL
-                </p>
-                <p className="text-white">You'll receive: {price ? (parseFloat(price) * 0.98).toFixed(4) : '0'} SOL</p>
+
+              <div className="modal-info-grid-large">
+                <div className="modal-info-item-large">
+                  <span className="modal-info-label-large">Marketplace Fee (2%)</span>
+                  <span className="modal-info-value-large">
+                    {price ? (parseFloat(price) * 0.02).toFixed(4) : '0'} SOL
+                  </span>
+                </div>
+                <div className="modal-info-item-large">
+                  <span className="modal-info-label-large">You'll Receive</span>
+                  <span className="modal-info-value-large">
+                    {price ? (parseFloat(price) * 0.98).toFixed(4) : '0'} SOL
+                  </span>
+                </div>
+              </div>
+
+              <div className="modal-button-group">
+                <button
+                  className="btn btn-secondary btn-half"
+                  onClick={() => setShowListModal(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary btn-half"
+                  onClick={handleListNFT}
+                  disabled={loading || !price || parseFloat(price) <= 0}
+                >
+                  {loading ? 'Listing...' : 'List NFT'}
+                </button>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowListModal(false)} disabled={loading}>
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleListNFT}
-                disabled={loading || !price || parseFloat(price) <= 0}
-              >
-                {loading ? 'Listing...' : 'List NFT'}
+          </div>
+        </div>
+      )}
+
+      {/* Details Modal (for listed NFTs) */}
+      {showDetailsModal && type === 'listed' && (
+        <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
+          <div className="modal-content-large" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowDetailsModal(false)}>
+              ✕
+            </button>
+            <div className="modal-image-container-large">
+              {nft.image && nft.image.startsWith('http') ? (
+                <Image
+                  src={nft.image}
+                  alt={nft.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  style={{ objectFit: 'contain' }}
+                  className="modal-image"
+                />
+              ) : (
+                <div className="modal-image-placeholder-large">
+                  <span>🖼️</span>
+                  <p>No Image</p>
+                </div>
+              )}
+            </div>
+            <div className="modal-details-large">
+              <h2 className="modal-title-large">{nft.name}</h2>
+              {nft.description && <p className="modal-description-large">{nft.description}</p>}
+              <div className="modal-info-grid-large">
+                <div className="modal-info-item-large">
+                  <span className="modal-info-label-large">Listed Price</span>
+                  <span className="modal-info-value-large">{nft.price} SOL</span>
+                </div>
+                <div className="modal-info-item-large">
+                  <span className="modal-info-label-large">Mint Address</span>
+                  <span className="modal-info-value-large" title={nft.mint}>
+                    {nft.mint.slice(0, 8)}...{nft.mint.slice(-8)}
+                  </span>
+                </div>
+                <div className="modal-info-item-large">
+                  <span className="modal-info-label-large">Status</span>
+                  <span className="modal-info-value-large">Active Listing</span>
+                </div>
+              </div>
+              <button className="btn btn-danger modal-cancel-btn" onClick={handleCancelListing} disabled={loading}>
+                {loading ? (
+                  <>
+                    <span className="loading-spinner-small"></span>
+                    Canceling...
+                  </>
+                ) : (
+                  '❌ Cancel Listing'
+                )}
               </button>
             </div>
           </div>

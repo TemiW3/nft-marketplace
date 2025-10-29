@@ -24,7 +24,7 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
   const [showListModal, setShowListModal] = useState(false)
   const [price, setPrice] = useState('')
   const [loading, setLoading] = useState(false)
-  const { createListing, cancelListing } = useMarketplace()
+  const { createListing, cancelListing, nftListings } = useMarketplace()
 
   const handleListNFT = async () => {
     setLoading(true)
@@ -46,9 +46,22 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
   const handleCancelListing = async () => {
     setLoading(true)
     try {
-      // TODO: Implement actual cancel listing logic here
-      console.log('Canceling listing for:', nft.mint)
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate transaction
+      // Find the full listing data from marketplace context
+      const listing = nftListings.find((l) => l.mint === nft.mint)
+      if (!listing) {
+        throw new Error('Listing not found')
+      }
+
+      // Convert to Listing format with PublicKeys
+      await cancelListing({
+        mint: new PublicKey(listing.mint),
+        seller: new PublicKey(listing.seller),
+        tokenAccount: new PublicKey(listing.tokenAccount),
+        price: listing.price,
+        isActive: listing.isActive,
+        bump: 0, // bump is not used in the cancel function
+      })
+
       alert(`Successfully canceled listing for ${nft.name}`)
     } catch (error) {
       console.error('Error canceling listing:', error)

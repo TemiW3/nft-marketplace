@@ -1,150 +1,23 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
-import { PublicKey } from '@solana/web3.js'
-import { Metaplex } from '@metaplex-foundation/js'
+import React, { useState } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import Image from 'next/image'
 import './marketplace.css'
-import { Nftmarketplace } from '../../../anchor/target/types/nftmarketplace'
-import idl from '../../idl/nftmarketplace.json'
+import { useMarketplace } from '@/contexts/MarketplaceContext'
 
-const PROGRAM_ID = new PublicKey('EKReNxVoonN5sRAVgvNQiMWFfvkyRYSqWnNoYgAUaQRW')
 const ITEMS_PER_PAGE = 9
 
-interface NFTListing {
-  mint: string
-  seller: string
-  price: number
-  tokenAccount: string
-  isActive: boolean
-  name: string
-  image: string
-  description: string
-}
-
 export default function MarketplacePage() {
-  const wallet = useWallet()
-  const { publicKey, connected } = wallet
-  const { connection } = useConnection()
-  const [marketplaceInitialized, setMarketplaceInitialized] = useState(false)
-  const [checkingMarketplace, setCheckingMarketplace] = useState(true)
-  const [initializing, setInitializing] = useState(false)
-  const [listings, setListings] = useState<NFTListing[]>([])
-  const [loading, setLoading] = useState(false)
+  const { publicKey, connected } = useWallet()
+  const { nftListings, loading, marketplaceInitialized, checkingMarketplace, initializeMarketplace, buyNft } =
+    useMarketplace()
+
+  const [feePercentage, setFeePercentage] = useState<string>('2')
+  const [selectedNFT, setSelectedNFT] = useState<any>(null)
+  const [showModal, setShowModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [error, setError] = useState<string | null>(null)
-  const [feePercentage, setFeePercentage] = useState<string>('2')
-  const [selectedNFT, setSelectedNFT] = useState<NFTListing | null>(null)
-  const [showModal, setShowModal] = useState(false)
-
-  // Check if marketplace is initialized
-  useEffect(() => {
-    const checkMarketplace = async () => {
-      setCheckingMarketplace(true)
-      try {
-        const provider = new AnchorProvider(connection, wallet as any, {})
-        const program = new Program(idl as Nftmarketplace, provider)
-
-        const [marketplacePDA] = PublicKey.findProgramAddressSync([Buffer.from('marketplace')], PROGRAM_ID)
-
-        try {
-          await program.account.nftMarketplace.fetch(marketplacePDA)
-          setMarketplaceInitialized(true)
-        } catch (err) {
-          setMarketplaceInitialized(false)
-        }
-      } catch (err) {
-        console.error('Error checking marketplace:', err)
-      } finally {
-        setCheckingMarketplace(false)
-      }
-    }
-
-    checkMarketplace()
-  }, [connection, wallet])
-
-  // Fetch listings when marketplace is initialized
-  useEffect(() => {
-    if (!marketplaceInitialized) return
-
-    const fetchListings = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const provider = new AnchorProvider(connection, wallet as any, {})
-        const program = new Program(idl as Nftmarketplace, provider)
-        const metaplex = Metaplex.make(connection)
-
-        // Fetch all active listings
-        const listingAccounts = await program.account.listing.all([
-          {
-            memcmp: {
-              offset: 8 + 32 + 32 + 32 + 8, // discriminator + seller + mint + token_account + price
-              bytes: '2', // isActive = true (base58 encoded)
-            },
-          },
-        ])
-
-        // Fetch metadata for each listing
-        const listingsWithMetadata = await Promise.all(
-          listingAccounts.map(async (listing) => {
-            try {
-              const mintAddress = new PublicKey(listing.account.mint)
-              const nft = await metaplex.nfts().findByMint({ mintAddress })
-
-              let image = ''
-              let name = listing.account.mint.toString().slice(0, 8)
-              let description = ''
-
-              if (nft.json) {
-                name = nft.json.name || name
-                // Clean up image URL - remove @ prefix if present
-                let rawImage = nft.json.image || ''
-                if (rawImage.startsWith('@')) {
-                  rawImage = rawImage.substring(1)
-                }
-                image = rawImage
-                description = nft.json.description || ''
-              }
-
-              return {
-                mint: listing.account.mint.toString(),
-                seller: listing.account.seller.toString(),
-                price: listing.account.price.toNumber(),
-                tokenAccount: listing.account.tokenAccount.toString(),
-                isActive: listing.account.isActive,
-                name,
-                image,
-                description,
-              }
-            } catch (err) {
-              console.error('Error fetching NFT metadata:', err)
-              return {
-                mint: listing.account.mint.toString(),
-                seller: listing.account.seller.toString(),
-                price: listing.account.price.toNumber(),
-                tokenAccount: listing.account.tokenAccount.toString(),
-                isActive: listing.account.isActive,
-                name: listing.account.mint.toString().slice(0, 8),
-                image: '',
-                description: '',
-              }
-            }
-          }),
-        )
-
-        setListings(listingsWithMetadata)
-      } catch (err) {
-        console.error('Error fetching listings:', err)
-        setError('Failed to load marketplace listings')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchListings()
-  }, [marketplaceInitialized, connection, wallet])
+  const [initializing, setInitializing] = useState(false)
 
   const handleInitializeMarketplace = async () => {
     if (!publicKey || !connected) {
@@ -162,24 +35,9 @@ export default function MarketplacePage() {
     setError(null)
 
     try {
-      const provider = new AnchorProvider(connection, wallet as any, {})
-      const program = new Program(idl as Nftmarketplace, provider)
-
-      const [marketplacePDA] = PublicKey.findProgramAddressSync([Buffer.from('marketplace')], PROGRAM_ID)
-
       // Convert percentage to basis points (e.g., 2% = 200 basis points)
       const feeBasisPoints = Math.round(fee * 100)
-
-      await program.methods
-        .initializeMarketplace(feeBasisPoints)
-        .accounts({
-          marketplace: marketplacePDA,
-          authority: publicKey,
-          systemProgram: PublicKey.default,
-        })
-        .rpc()
-
-      setMarketplaceInitialized(true)
+      await initializeMarketplace(feeBasisPoints)
     } catch (err: any) {
       console.error('Error initializing marketplace:', err)
       setError(err.message || 'Failed to initialize marketplace')
@@ -188,7 +46,7 @@ export default function MarketplacePage() {
     }
   }
 
-  const openNFTModal = (listing: NFTListing) => {
+  const openNFTModal = (listing: any) => {
     setSelectedNFT(listing)
     setShowModal(true)
   }
@@ -198,65 +56,24 @@ export default function MarketplacePage() {
     setSelectedNFT(null)
   }
 
-  const handleBuyNFT = async (listing: NFTListing) => {
-    if (!publicKey || !connected) {
-      alert('Please connect your wallet first')
-      return
-    }
+  const handleBuyFromModal = async () => {
+    if (!selectedNFT) return
 
     try {
-      const provider = new AnchorProvider(connection, wallet as any, {})
-      const program = new Program(idl as Nftmarketplace, provider)
-
-      const mintPubkey = new PublicKey(listing.mint)
-      const [marketplacePDA] = PublicKey.findProgramAddressSync([Buffer.from('marketplace')], PROGRAM_ID)
-      const [listingPDA] = PublicKey.findProgramAddressSync([Buffer.from('listing'), mintPubkey.toBuffer()], PROGRAM_ID)
-
-      // Get marketplace authority
-      const marketplaceAccount = await program.account.nftMarketplace.fetch(marketplacePDA)
-      const marketplaceAuthority = marketplaceAccount.authority as PublicKey
-
-      // Get buyer's token account (or create placeholder)
-      const buyerTokenAccounts = await connection.getTokenAccountsByOwner(publicKey, { mint: mintPubkey })
-      const buyerTokenAccount =
-        buyerTokenAccounts.value.length > 0 ? buyerTokenAccounts.value[0].pubkey : PublicKey.default
-
-      await program.methods
-        .buy()
-        .accounts({
-          listing: listingPDA,
-          marketplace: marketplacePDA,
-          tokenAccount: new PublicKey(listing.tokenAccount),
-          buyerTokenAccount: buyerTokenAccount,
-          buyer: publicKey,
-          seller: new PublicKey(listing.seller),
-          marketplaceAuthority: marketplaceAuthority,
-          tokenProgram: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
-          systemProgram: PublicKey.default,
-        })
-        .rpc()
-
+      await buyNft(selectedNFT)
       alert('NFT purchased successfully!')
       closeModal()
-      // Refresh listings
-      window.location.reload()
     } catch (err: any) {
       console.error('Error buying NFT:', err)
       alert(err.message || 'Failed to purchase NFT')
     }
   }
 
-  const handleBuyFromModal = () => {
-    if (selectedNFT) {
-      handleBuyNFT(selectedNFT)
-    }
-  }
-
   // Pagination logic
-  const totalPages = Math.ceil(listings.length / ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(nftListings.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentListings = listings.slice(startIndex, endIndex)
+  const currentListings = nftListings.slice(startIndex, endIndex)
 
   const goToPage = (page: number) => {
     setCurrentPage(page)
@@ -353,7 +170,7 @@ export default function MarketplacePage() {
             Loading marketplace listings...
           </p>
         </div>
-      ) : listings.length === 0 ? (
+      ) : nftListings.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">🏷️</div>
           <h3>No Listings Available</h3>
@@ -363,7 +180,7 @@ export default function MarketplacePage() {
         <>
           <div className="marketplace-stats">
             <p className="text-gray">
-              Showing {startIndex + 1}-{Math.min(endIndex, listings.length)} of {listings.length} listings
+              Showing {startIndex + 1}-{Math.min(endIndex, nftListings.length)} of {nftListings.length} listings
             </p>
           </div>
 

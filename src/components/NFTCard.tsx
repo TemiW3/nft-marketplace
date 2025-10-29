@@ -2,6 +2,8 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import './NFTCard.css'
+import { useMarketplace } from '@/contexts/MarketplaceContext'
+import { PublicKey } from '@metaplex-foundation/js'
 
 interface NFT {
   mint: string
@@ -22,13 +24,14 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
   const [showListModal, setShowListModal] = useState(false)
   const [price, setPrice] = useState('')
   const [loading, setLoading] = useState(false)
+  const { createListing, cancelListing } = useMarketplace()
 
   const handleListNFT = async () => {
     setLoading(true)
     try {
-      // TODO: Implement actual listing logic here
-      console.log('Listing NFT:', nft.mint, 'for', price, 'SOL')
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate transaction
+      // Convert SOL to lamports (1 SOL = 1e9 lamports)
+      const priceInLamports = parseFloat(price) * 1e9
+      await createListing(new PublicKey(nft.mint), priceInLamports)
       alert(`Successfully listed ${nft.name} for ${price} SOL`)
       setShowListModal(false)
       setPrice('')

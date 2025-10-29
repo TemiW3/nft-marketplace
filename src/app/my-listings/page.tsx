@@ -1,65 +1,34 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
-import { PublicKey } from '@solana/web3.js'
+import { useWallet } from '@solana/wallet-adapter-react'
 import NFTCard from '@/components/NFTCard'
 import { useUserNFTs } from '@/hooks/useUserNFTs'
+import { useMarketplace } from '@/contexts/MarketplaceContext'
 import './my-listings.css'
-import { Nftmarketplace } from '../../../anchor/target/types/nftmarketplace'
-import idl from '../../idl/nftmarketplace.json'
 
 export default function MyListingsPage() {
-  const wallet = useWallet()
-  const { publicKey, connected } = wallet
-  const { connection } = useConnection()
+  const { publicKey, connected } = useWallet()
   const [activeTab, setActiveTab] = useState<'available' | 'listed'>('available')
   const { nfts, loading: nftsLoading, error: nftsError } = useUserNFTs()
-  const [listedMints, setListedMints] = useState<Set<string>>(new Set())
-  const [listingsLoading, setListingsLoading] = useState(false)
+  const { nftListings, loading: listingsLoading } = useMarketplace()
 
-  // Fetch user's active listings
-  useEffect(() => {
-    if (!publicKey || !connected) {
-      setListedMints(new Set())
-      return
-    }
+  // Get user's active listings (these are the NFTs they've listed)
+  const userListings = nftListings.filter((listing) => listing.seller === publicKey?.toString() && listing.isActive)
 
-    const fetchListings = async () => {
-      setListingsLoading(true)
-      try {
-        const provider = new AnchorProvider(connection, wallet as any, {})
-        const program = new Program(idl as Nftmarketplace, provider)
-
-        // Fetch all listings for this seller
-        const listings = await program.account.listing.all([
-          {
-            memcmp: {
-              offset: 8, // Skip discriminator
-              bytes: publicKey.toBase58(),
-            },
-          },
-        ])
-
-        // Filter for active listings and extract mint addresses
-        const activeMints = new Set(
-          listings.filter((listing) => listing.account.isActive).map((listing) => listing.account.mint.toString()),
-        )
-
-        setListedMints(activeMints)
-      } catch (error) {
-        console.error('Error fetching listings:', error)
-      } finally {
-        setListingsLoading(false)
-      }
-    }
-
-    fetchListings()
-  }, [publicKey, connected, connection, wallet])
+  const userListedMints = new Set(userListings.map((listing) => listing.mint))
 
   // Split NFTs into available and listed
-  const availableNFTs = nfts.filter((nft) => !listedMints.has(nft.mint))
-  const listedNFTs = nfts.filter((nft) => listedMints.has(nft.mint))
+  // Available: NFTs in wallet that are NOT listed
+  const availableNFTs = nfts.filter((nft) => !userListedMints.has(nft.mint))
+
+  // Listed: Show the marketplace listings data (not from wallet since they're in escrow)
+  const listedNFTs = userListings.map((listing) => ({
+    mint: listing.mint,
+    name: listing.name,
+    image: listing.image,
+    description: listing.description,
+    price: listing.price / 1e9, // Convert lamports to SOL
+  }))
 
   if (!connected) {
     return (

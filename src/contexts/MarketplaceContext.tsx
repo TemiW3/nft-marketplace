@@ -216,7 +216,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
         })
         .rpc()
 
-      await refreshListings()
+      // Do not refresh here – let the UI refresh after the user acknowledges success
     } catch (error) {
       console.error('Error creating listing:', error)
       throw error
@@ -278,7 +278,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
       const signature = await wallet.sendTransaction(transaction, connection)
       await connection.confirmTransaction(signature, 'processed')
 
-      await refreshListings()
+      // Do not refresh here – let the UI refresh after the user acknowledges success
     } catch (error) {
       console.error('Error buying NFT:', error)
       throw error
@@ -318,7 +318,7 @@ export const MarketplaceProvider: React.FC<MarketplaceProviderProps> = ({ childr
         })
         .rpc()
 
-      await refreshListings()
+      // Do not refresh here – let the UI refresh after the user acknowledges success
     } catch (error) {
       console.error('Error canceling NFT listing:', error)
       throw error

@@ -4,7 +4,7 @@ import Image from 'next/image'
 import './NFTCard.css'
 import { useMarketplace } from '@/contexts/MarketplaceContext'
 import { PublicKey } from '@metaplex-foundation/js'
-import NotificationModal from './NotificationModal'
+import { useNotification } from './NotificationProvider'
 
 interface NFT {
   mint: string
@@ -26,30 +26,10 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [price, setPrice] = useState('')
   const [loading, setLoading] = useState(false)
-  const { createListing, cancelListing, nftListings } = useMarketplace()
+  const { createListing, cancelListing, nftListings, refreshListings } = useMarketplace()
+  const { showNotification } = useNotification()
 
-  // Notification state
-  const [notification, setNotification] = useState<{
-    isOpen: boolean
-    title: string
-    message: string
-    type: 'success' | 'error' | 'info'
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    type: 'info',
-  })
-
-  const showNotification = (title: string, message: string, type: 'success' | 'error' | 'info') => {
-    setNotification({ isOpen: true, title, message, type })
-  }
-
-  const closeNotification = () => {
-    setNotification({ ...notification, isOpen: false })
-    // Trigger a refresh after notification is closed
-    // This will cause the component to re-render with updated data
-  }
+  // Notifications are handled globally via NotificationProvider
 
   const handleListNFT = async () => {
     setLoading(true)
@@ -63,14 +43,21 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
       // Don't close modal yet - wait for user to see the notification
       setLoading(false)
       setPrice('')
-      showNotification('Success!', `Successfully listed ${nft.name} for ${listingPrice} SOL`, 'success')
-
-      // Close the listing modal after showing notification
       setShowListModal(false)
+      showNotification({
+        title: 'Success!',
+        message: `Successfully listed ${nft.name} for ${listingPrice} SOL`,
+        type: 'success',
+        onClose: () => refreshListings(),
+      })
     } catch (error: any) {
       console.error('Error listing NFT:', error)
       setLoading(false)
-      showNotification('Error', error?.message || 'Failed to list NFT', 'error')
+      showNotification({
+        title: 'Error',
+        message: error?.message || 'Failed to list NFT',
+        type: 'error',
+      })
     }
   }
 
@@ -95,14 +82,21 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
 
       // Don't close modal yet - wait for user to see the notification
       setLoading(false)
-      showNotification('Success!', `Successfully canceled listing for ${nft.name}`, 'success')
-
-      // Close the details modal after showing notification
       setShowDetailsModal(false)
+      showNotification({
+        title: 'Success!',
+        message: `Successfully canceled listing for ${nft.name}`,
+        type: 'success',
+        onClose: () => refreshListings(),
+      })
     } catch (error: any) {
       console.error('Error canceling listing:', error)
       setLoading(false)
-      showNotification('Error', error?.message || 'Failed to cancel listing', 'error')
+      showNotification({
+        title: 'Error',
+        message: error?.message || 'Failed to cancel listing',
+        type: 'error',
+      })
     }
   }
 
@@ -278,14 +272,7 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
         </div>
       )}
 
-      {/* Notification Modal */}
-      <NotificationModal
-        isOpen={notification.isOpen}
-        onClose={closeNotification}
-        title={notification.title}
-        message={notification.message}
-        type={notification.type}
-      />
+      {/* Notification handled globally */}
     </>
   )
 }

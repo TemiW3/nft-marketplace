@@ -6,6 +6,7 @@ import '@/components/Home.css'
 import { WalletContextProvider } from '@/contexts/WalletContext'
 import { MarketplaceProvider } from '@/contexts/MarketplaceContext'
 import Header from '@/components/Header'
+import { NotificationProvider } from '@/components/NotificationProvider'
 
 export const metadata: Metadata = {
   title: 'NFT Marketplace | Solana',
@@ -19,10 +20,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <WalletContextProvider>
           <MarketplaceProvider>
-            <div className="App">
-              <Header />
-              <main>{children}</main>
-            </div>
+            <NotificationProvider>
+              <div className="App">
+                <Header />
+                <main>{children}</main>
+              </div>
+            </NotificationProvider>
           </MarketplaceProvider>
         </WalletContextProvider>
       </body>

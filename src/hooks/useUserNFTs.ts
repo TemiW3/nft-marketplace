@@ -54,8 +54,11 @@ export function useUserNFTs() {
         const nftsWithMetadata = await Promise.all(
           nftList.map(async (nft) => {
             try {
-              // Load full NFT data
-              const fullNft = await metaplex.nfts().load({ metadata: nft })
+              // Load full NFT data only when the model is Metadata; otherwise it's already loaded
+              let fullNft: any = nft as any
+              if ((nft as any).model === 'metadata') {
+                fullNft = await metaplex.nfts().load({ metadata: nft as any })
+              }
 
               // Fetch off-chain metadata
               let image = ''
@@ -69,37 +72,45 @@ export function useUserNFTs() {
                 description = fullNft.json.description
               }
 
+              // Resolve mint address across models (Metadata | Nft | Sft)
+              const mintStr =
+                (fullNft as any)?.mintAddress?.toString?.() ||
+                (fullNft as any)?.address?.toString?.() ||
+                (nft as any)?.mintAddress?.toString?.() ||
+                (nft as any)?.address?.toString?.()
+
               return {
-                mint: nft.mintAddress.toString(),
-                name: nft.name,
-                symbol: nft.symbol,
-                uri: nft.uri,
+                mint: mintStr,
+                name: (fullNft as any).name ?? (nft as any).name,
+                symbol: (fullNft as any).symbol ?? (nft as any).symbol,
+                uri: (fullNft as any).uri ?? (nft as any).uri,
                 image,
                 description,
-                sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
-                creators: nft.creators.map((creator) => ({
+                sellerFeeBasisPoints: (nft as any).sellerFeeBasisPoints,
+                creators: ((nft as any).creators || []).map((creator: any) => ({
                   address: creator.address.toString(),
                   verified: creator.verified,
                   share: creator.share,
                 })),
-                collection: nft.collection
+                collection: (nft as any).collection
                   ? {
-                      verified: nft.collection.verified,
-                      key: nft.collection.address.toString(),
+                      verified: (nft as any).collection.verified,
+                      key: (nft as any).collection.address.toString(),
                     }
                   : undefined,
               }
             } catch (err) {
-              console.error(`Error loading NFT ${nft.mintAddress.toString()}:`, err)
+              const mintId = (nft as any)?.mintAddress?.toString?.() || (nft as any)?.address?.toString?.() || 'unknown'
+              console.error(`Error loading NFT ${mintId}:`, err)
               // Return basic info if full load fails
               return {
-                mint: nft.mintAddress.toString(),
-                name: nft.name,
-                symbol: nft.symbol,
-                uri: nft.uri,
+                mint: (nft as any)?.mintAddress?.toString?.() || (nft as any)?.address?.toString?.() || '',
+                name: (nft as any).name,
+                symbol: (nft as any).symbol,
+                uri: (nft as any).uri,
                 image: '',
                 description: '',
-                sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
+                sellerFeeBasisPoints: (nft as any).sellerFeeBasisPoints,
                 creators: [],
               }
             }

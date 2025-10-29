@@ -4,6 +4,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import Image from 'next/image'
 import './marketplace.css'
 import { useMarketplace } from '@/contexts/MarketplaceContext'
+import NotificationModal from '@/components/NotificationModal'
 
 const ITEMS_PER_PAGE = 9
 
@@ -18,6 +19,27 @@ export default function MarketplacePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const [initializing, setInitializing] = useState(false)
+
+  // Notification state
+  const [notification, setNotification] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+  })
+
+  const showNotification = (title: string, message: string, type: 'success' | 'error' | 'info') => {
+    setNotification({ isOpen: true, title, message, type })
+  }
+
+  const closeNotification = () => {
+    setNotification({ ...notification, isOpen: false })
+  }
 
   const handleInitializeMarketplace = async () => {
     if (!publicKey || !connected) {
@@ -61,11 +83,12 @@ export default function MarketplacePage() {
 
     try {
       await buyNft(selectedNFT)
-      alert('NFT purchased successfully!')
+      showNotification('Success!', `Successfully purchased ${selectedNFT.name}!`, 'success')
+      // Close modal after showing notification
       closeModal()
     } catch (err: any) {
       console.error('Error buying NFT:', err)
-      alert(err.message || 'Failed to purchase NFT')
+      showNotification('Error', err.message || 'Failed to purchase NFT', 'error')
     }
   }
 
@@ -315,6 +338,15 @@ export default function MarketplacePage() {
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   )
 }

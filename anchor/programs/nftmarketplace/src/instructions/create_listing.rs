@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, transfer, Transfer, TokenAccount, Mint};
 
 use crate::state::*;
+use crate::errors::NftMarketplaceError;
 
 pub fn create_listing(
     ctx: Context<CreateListing>,
@@ -9,12 +10,23 @@ pub fn create_listing(
 ) -> Result<()> {
     let listing = &mut ctx.accounts.listing;
 
+    // Prevent creating an already-active listing
+    if listing.is_active {
+        return err!(NftMarketplaceError::ListingAlreadyActive);
+    }
+
+    // (Re)initialize listing data
     listing.seller = ctx.accounts.seller.key();
     listing.mint = ctx.accounts.mint.key();
     listing.token_account = ctx.accounts.token_account.key();
     listing.price = price;
     listing.is_active = true;
-    listing.bump = ctx.bumps.listing;
+
+    let (_pda, listing_bump) = Pubkey::find_program_address(
+        &[b"listing", ctx.accounts.mint.key().as_ref()],
+        ctx.program_id,
+    );
+    listing.bump = listing_bump;
 
     // Transfer the NFT from the seller to the marketplace's token account
     let cpi_accounts = Transfer {
@@ -37,7 +49,7 @@ pub struct CreateListing<'info> {
     pub seller: Signer<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = seller,
         space = 8 + Listing::INIT_SPACE,
         seeds = [b"listing", mint.key().as_ref()],
@@ -52,7 +64,7 @@ pub struct CreateListing<'info> {
     pub marketplace: Account<'info, NftMarketplace>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = seller,
         token::mint = mint,
         token::authority = marketplace,

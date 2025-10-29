@@ -462,6 +462,11 @@
       "code": 6003,
       "name": "Unauthorized",
       "msg": "Unauthorized"
+    },
+    {
+      "code": 6004,
+      "name": "ListingAlreadyActive",
+      "msg": "Listing is already active"
     }
   ],
   "types": [

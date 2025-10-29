@@ -4,6 +4,7 @@ import Image from 'next/image'
 import './NFTCard.css'
 import { useMarketplace } from '@/contexts/MarketplaceContext'
 import { PublicKey } from '@metaplex-foundation/js'
+import NotificationModal from './NotificationModal'
 
 interface NFT {
   mint: string
@@ -27,20 +28,49 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
   const [loading, setLoading] = useState(false)
   const { createListing, cancelListing, nftListings } = useMarketplace()
 
+  // Notification state
+  const [notification, setNotification] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+  })
+
+  const showNotification = (title: string, message: string, type: 'success' | 'error' | 'info') => {
+    setNotification({ isOpen: true, title, message, type })
+  }
+
+  const closeNotification = () => {
+    setNotification({ ...notification, isOpen: false })
+    // Trigger a refresh after notification is closed
+    // This will cause the component to re-render with updated data
+  }
+
   const handleListNFT = async () => {
     setLoading(true)
     try {
       // Convert SOL to lamports (1 SOL = 1e9 lamports)
       const priceInLamports = parseFloat(price) * 1e9
+      const listingPrice = price // Store before clearing
+
       await createListing(new PublicKey(nft.mint), priceInLamports)
-      alert(`Successfully listed ${nft.name} for ${price} SOL`)
-      setShowListModal(false)
-      setPrice('')
-    } catch (error) {
-      console.error('Error listing NFT:', error)
-      alert('Failed to list NFT')
-    } finally {
+
+      // Don't close modal yet - wait for user to see the notification
       setLoading(false)
+      setPrice('')
+      showNotification('Success!', `Successfully listed ${nft.name} for ${listingPrice} SOL`, 'success')
+
+      // Close the listing modal after showing notification
+      setShowListModal(false)
+    } catch (error: any) {
+      console.error('Error listing NFT:', error)
+      setLoading(false)
+      showNotification('Error', error?.message || 'Failed to list NFT', 'error')
     }
   }
 
@@ -63,12 +93,16 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
         bump: 0, // bump is not used in the cancel function
       })
 
-      alert(`Successfully canceled listing for ${nft.name}`)
-    } catch (error) {
-      console.error('Error canceling listing:', error)
-      alert('Failed to cancel listing')
-    } finally {
+      // Don't close modal yet - wait for user to see the notification
       setLoading(false)
+      showNotification('Success!', `Successfully canceled listing for ${nft.name}`, 'success')
+
+      // Close the details modal after showing notification
+      setShowDetailsModal(false)
+    } catch (error: any) {
+      console.error('Error canceling listing:', error)
+      setLoading(false)
+      showNotification('Error', error?.message || 'Failed to cancel listing', 'error')
     }
   }
 
@@ -243,6 +277,15 @@ export default function NFTCard({ nft, type }: NFTCardProps) {
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </>
   )
 }

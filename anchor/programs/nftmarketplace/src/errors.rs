@@ -13,4 +13,7 @@ pub enum NftMarketplaceError {
 
     #[msg("Unauthorized")]
     Unauthorized,
+
+    #[msg("Listing is already active")]
+    ListingAlreadyActive,
 }
